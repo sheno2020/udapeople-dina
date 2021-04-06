@@ -17,4 +17,6 @@
       # Your code here
 
   roles:
+    - configure-server
     # Your code here
+    
