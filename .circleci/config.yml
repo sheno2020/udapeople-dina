@@ -349,7 +349,6 @@ jobs:
             cd backend
             npm i 
             npm run build 
-            npm run migrations
             npm run migrations:revert
             npm run migrations > /tmp/migration.log
             cat /tmp/migration.log
