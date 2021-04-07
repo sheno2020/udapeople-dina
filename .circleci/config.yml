@@ -38,6 +38,17 @@ commands:
             aws cloudformation delete-stack --stack-name << parameters.frontend-stack >>
             exit 0
   
+  extract-commit-message:
+    description: Extract commit message
+    steps:
+      - run:
+          name: Extract commit message
+          when: always
+          command: |
+            echo "export COMMIT_MESSAGE=\"$(git log --format=%B -n 1 $CIRCLE_SHA1)\"" >> $BASH_ENV
+            source $BASH_ENV
+  
+  
   create-env-file:
     description: Create .env file
     steps:
