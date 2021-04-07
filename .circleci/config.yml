@@ -271,25 +271,29 @@ jobs:
 
   # Here's where you will add some code to rollback on failure
 
+  # - revert-migrations:
+         
   run-migrations:
     docker:
-      - image: python:3.7-alpine3.11
+      - image: circleci/node:13.8.0
     steps:
       - checkout
+      - aws-cli/setup
       - restore_cache:
-          keys: 
-            - backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+          key: backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+      - create-env-file
       - run:
-          name: Install dependencies
+          name: Run migrations
           command: |
-            pip install awscli && apk add --update nodejs npm
-      - run: |
-          cd backend
-          npm i 
-          npm run build 
-          npm run migrations
-     # - revert-migrations:
-                  
+            cd backend
+            npm run migrations:revert
+            npm run migrations > /tmp/migration.log
+            cat /tmp/migration.log
+            MIGRATION=`cat /tmp/migration.log | grep -c "has been executed successfully"`
+            echo "Migration status: ${MIGRATION}"
+
+  
+         
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
