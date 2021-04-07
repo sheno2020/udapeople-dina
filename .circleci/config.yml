@@ -187,8 +187,8 @@ jobs:
              echo "[web]" > inventory
              aws ec2 describe-instances \
              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-             --output text >> /root/project/inventory 
-               cat /root/project/inventory 
+             --output text >> .circleci/ansible/inventory.txt 
+               cat .circleci/ansible/inventory.txt 
                pwd
             # Your code here
             # exit 1
@@ -197,8 +197,8 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/inventory
-          # - project/.circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.txt
+            
       # Here's where you will add some code to rollback on failure
 
   configure-infrastructure:
@@ -211,7 +211,7 @@ jobs:
       
       - run: apk add tar gzip
       - attach_workspace:
-          at: ./
+          at: ~/
       - run: mkdir -p  .circleci/ansible/roles/configure-server/files/backend
      
         #- restore_cache:
@@ -248,7 +248,8 @@ jobs:
         #    # Your code here
         # exit 1
             command: |
-                ansible-playbook -i inventory .circleci/ansible/configure-server.yml
+                 cd ~/project/.circleci/ansible
+            ansible-playbook configure-server.yml --inventory-file=inventory.txt
             environment:
               ANSIBLE_HOST_KEY_CHECKING: False
       #- destroy_environment:
