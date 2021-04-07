@@ -33,12 +33,12 @@
     mode: 0664
     
 - name: "install rsync"
-  become: yes
-  shell: |
+  become: true
+  shell:
     apt install -y rsync
-    
+      
 - name: "copy backend folder to remote server"
-  become: yes
-  synchronize:
+  become: true
+  copy:
     src: backend
     dest: ~/
