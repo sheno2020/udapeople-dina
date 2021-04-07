@@ -295,6 +295,10 @@ jobs:
       - host-authenticity-bypass
       - create-env-file
       - create-bash-profile-file
+      - run: mkdir -p  .circleci/ansible/roles/configure-server/files/backend
+      - run: cp -rv backend/*  .circleci/ansible/roles/configure-server/files/backend
+      - run: ls .circleci/ansible/roles/configure-server/files/backend
+          
       
       - run:
             name: Configure server
