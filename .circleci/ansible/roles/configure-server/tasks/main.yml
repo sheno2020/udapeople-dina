@@ -32,11 +32,12 @@
     group: ubuntu
     mode: 0664
     
-- name: install rsync
+- name: "install rsync"
   become: yes
   shell: |
     apt install -y rsync
-- name: copy backend folder to remote server
+    
+- name: "copy backend folder to remote server"
   become: yes
   synchronize:
     src: backend
