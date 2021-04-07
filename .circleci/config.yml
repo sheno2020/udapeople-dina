@@ -19,10 +19,10 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      backend-infra:
+      backend-stack:
         type: string
         default: backend-stack-${CIRCLE_WORKFLOW_ID}
-      frontend-infra:
+      frontend-stack:
         type: string
         default: frontend-stack-${CIRCLE_WORKFLOW_ID}
       s3-bucket:
@@ -270,6 +270,7 @@ jobs:
                 --stack-name frontend-stack-$CIRCLE_WORKFLOW_ID \
                 --parameter-overrides ID=$CIRCLE_WORKFLOW_ID
       
+       - destroy-environment
       #- destroy-environment
         
  # Here's where you will add some code to rollback on failure
