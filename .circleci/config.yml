@@ -273,22 +273,30 @@ jobs:
 
   run-migrations:
     docker:
-      # Docker image here that supports NodeJS
       - image: circleci/node:13.8.0
     steps:
-      # Checkout code from git
+      - checkout
+      - aws-cli/setup
+      - restore_cache:
+          key: backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+      - create-env-file
       - run:
           name: Run migrations
           command: |
-            # Your code here
-            exit 1
+            cd backend
+            npm run migrations:revert
+            npm run migrations > /tmp/migration.log
+            cat /tmp/migration.log
+            MIGRATION=`cat /tmp/migration.log | grep -c "has been executed successfully"`
+            echo "Migration status: ${MIGRATION}"
       - run:
           name: Send migration results to memstash
           command: |
-            # Your code here
-            exit 1
-      # Here's where you will add some code to rollback on failure
-
+            curl -H "Content-Type: text/plain" -H "token: << pipeline.parameters.memstash-token >>" --request PUT --data "$MIGRATION" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+      - slack-failed
+      - destroy-environment
+      - revert-migrations
+      
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
