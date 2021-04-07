@@ -290,10 +290,6 @@ jobs:
             MIGRATION=`cat /tmp/migration.log | grep -c "has been executed successfully"`
             echo "Migration status: ${MIGRATION}"
       - run:
-          name: Send migration results to memstash
-          command: |
-            curl -H "Content-Type: text/plain" -H "token: << pipeline.parameters.memstash-token >>" --request PUT --data "$MIGRATION" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
-      - slack-failed
       - destroy-environment
       - revert-migrations
       
