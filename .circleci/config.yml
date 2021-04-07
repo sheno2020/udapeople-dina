@@ -289,8 +289,7 @@ jobs:
           npm run build 
           npm run migrations
       - revert-migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID}
-        
+                  
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
