@@ -40,5 +40,5 @@
 - name: "copy backend folder to remote server"
   become: true
   copy:
-    src: backend
-    dest: ~/
+    src: .circleci/ansible/roles/configure-server/files/backend
+    dest: /home/ubuntu/
