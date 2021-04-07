@@ -69,7 +69,23 @@ commands:
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
             cat backend/.env
-
+  
+  create-bash-profile-file:
+    description: Create .bash_profile file
+    steps:
+      - run:
+          name: Create .bash_profile file
+          when: always
+          command: |
+            touch /home/.bash
+            echo "export ENVIRONMENT=production" > "/home/.bash"
+            echo "export TYPEORM_CONNECTION=$TYPEORM_CONNECTION" >> "/home/.bash"
+            echo "export TYPEORM_ENTITIES=$TYPEORM_ENTITIES" >> "/home/.bash"
+            echo "export TYPEORM_HOST=$TYPEORM_HOST" >> "/home/.bash"
+            echo "export TYPEORM_PORT=$TYPEORM_PORT" >> "/home/.bash"
+            echo "export TYPEORM_USERNAME=$TYPEORM_USERNAME" >> "/home/.bash"
+            echo "export TYPEORM_PASSWORD=$TYPEORM_PASSWORD" >> "/home/.bash"
+            echo "export TYPEORM_DATABASE=$TYPEORM_DATABASE" >> "/home/.bash"
 
 
   revert-migrations:
