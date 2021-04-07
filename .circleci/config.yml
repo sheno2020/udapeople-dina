@@ -86,6 +86,14 @@ commands:
             echo "export TYPEORM_USERNAME=$TYPEORM_USERNAME" >> "/home/.bash"
             echo "export TYPEORM_PASSWORD=$TYPEORM_PASSWORD" >> "/home/.bash"
             echo "export TYPEORM_DATABASE=$TYPEORM_DATABASE" >> "/home/.bash"
+  host-authenticity-bypass:
+    description: Avoid unknown hosts
+    steps:
+      - run:
+          name: Host authenticity bypass
+          when: always
+          command: |
+            echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
 
 
   revert-migrations:
