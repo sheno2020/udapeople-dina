@@ -113,8 +113,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend-build]
       - run:
           name: Build front-end
           command: |
@@ -125,15 +123,13 @@ jobs:
             #exit 1
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build
+          key: frontend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
 
   build-backend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend-build]
       - run:
           name: Back-end build
           command: |
@@ -143,8 +139,10 @@ jobs:
             npm run build       
             #exit 1
       - save_cache:
-          paths: [backend/node_modules]
-          key: backend-build
+          key: backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+          paths:
+            - backend/node_modules
+            - backend/dist
 
   test-frontend:
     docker:
@@ -157,12 +155,13 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - "frontend-build"
+            - "frontend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}"
       - run:
-          name: sheno frontend test
+          name: Run frontend tests
           command: |
             cd frontend
             npm i
+            npm install oauth-sign
             npm run test
 
   test-backend:
@@ -177,9 +176,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - "backend-build"
+            - "backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}"
       - run:
-          name: sheno backend test
+          name: Run backend tests
           command: |
             cd backend
             npm i
@@ -196,7 +195,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - "frontend-build"
+            - "frontend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}"
       - run:
           command: |
             cd frontend
@@ -213,7 +212,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - "backend-build"
+            - "backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}"
       - run:
           command: |
             cd backend
@@ -227,33 +226,17 @@ jobs:
       # Checkout code from git
       - checkout
       - run:
+          name: Prerequisites
+          command: |
+            yum -y install tar gzip jq git
+      - run:
           name: Ensure back-end infrastructure exists
           command: |
-            #--tags project=your-tag \
-            # --stack-name "your back-end stack name with workflow id" \
-            # --parameter-overrides ID="your workflow id"  
-            # exit 1
-            # aws cloudformation deploy \
-            #  --template-file .circleci/files/estcfn.yml \
-            #  --stack-name my-stack-circleci
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
+              --tags project=udapeople type=backend\
               --stack-name backend-stack-$CIRCLE_WORKFLOW_ID \
               --parameter-overrides ID=$CIRCLE_WORKFLOW_ID
-
-      - run:
-          name: Ensure front-end infrastructure exist
-          command: |
-            #aws cloudformation deploy \
-              #--template-file .circleci/files/frontend.yml \
-              #--tags project=your-tag \
-              # --stack-name "your front-end stack name with workflow id" \
-              # --parameter-overrides ID="your workflow id"  
-              # exit 1
-              aws cloudformation deploy \
-                --template-file .circleci/files/frontend.yml \
-                --stack-name frontend-stack-$CIRCLE_WORKFLOW_ID \
-                --parameter-overrides ID=$CIRCLE_WORKFLOW_ID
 
       - run:
            name: Add back-end ip to ansible inventory
@@ -265,75 +248,51 @@ jobs:
              --output text >> .circleci/ansible/inventory.txt 
                cat .circleci/ansible/inventory.txt 
                pwd
-            # Your code here
-            # exit 1
-      - run: yum install -y tar gzip
-
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
             
-      # Here's where you will add some code to rollback on failure
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+                --template-file .circleci/files/frontend.yml \
+                --tags project=udapeople type=frontend\
+                --stack-name frontend-stack-$CIRCLE_WORKFLOW_ID \
+                --parameter-overrides ID=$CIRCLE_WORKFLOW_ID
+      
+      - destroy-environment
+        
+ # Here's where you will add some code to rollback on failure
 
   configure-infrastructure:
     docker:
     - image: python:3.7-alpine3.11
     steps:
+      - checkout
       - add_ssh_keys:
           fingerprints: [77:50:06:fa:0d:9f:b2:0e:66:6a:46:6a:5d:68:36:b1]
-      - checkout
       
-      - run: apk add tar gzip
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+            apk add jq tar gzip git curl
+            apk add --update py3-pip && pip3 install --upgrade pip && pip3 install awscli
+           
       - attach_workspace:
           at: ~/
-      - run: mkdir -p  .circleci/ansible/roles/configure-server/files/backend
-     
-        #- restore_cache:
-        #    keys:
-        #      - back-end-{{ checksum "backend/package.json" }}
-
-      - run:
-            name: Make .env file
-            command: |
-              cd backend
-              echo "ENVIRONMENT=production" > env
-              echo "NODE_ENV=production" >> env
-              echo "TYPEORM_CONNECTION=$TYPEORM_CONNECTION" >> env
-              echo "TYPEORM_ENTITIES=$TYPEORM_ENTITIES" >> env
-              echo "TYPEORM_HOST=$TYPEORM_HOST" >> env
-              echo "TYPEORM_PORT=$TYPEORM_PORT" >> env
-              echo "TYPEORM_USERNAME=$TYPEORM_USERNAME" >> env
-              echo "TYPEORM_PASSWORD=$TYPEORM_PASSWORD" >> env
-              echo "TYPEORM_DATABASE=$TYPEORM_DATABASE" >> env
-
-      - run:
-            name: Install dependencies
-            command: |
-              # Your code here
-              # exit 1
-
-              pip install awscli && apk add --update ansible 
-              cp -rv backend/*  .circleci/ansible/roles/configure-server/files/backend
-      - run: ls .circleci/ansible/roles/configure-server/files/backend
-      - run: apk update && apk add --upgrade rsync openssh
-
+      - host-authenticity-bypass
+      - create-env-file
+      - create-bash-profile-file
+      
       - run:
             name: Configure server
-        #    # Your code here
-        # exit 1
             command: |
                  cd ~/project/.circleci/ansible
                  ansible-playbook configure-server.yml --inventory-file=inventory.txt
-            environment:
-              ANSIBLE_HOST_KEY_CHECKING: False
-     # - destroy_environment:
-     #      workflow_id: ${CIRCLE_WORKFLOW_ID}
-
-  # Here's where you will add some code to rollback on failure
-
-  # - revert-migrations:
-         
+                     
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
@@ -347,8 +306,6 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm i 
-            npm run build 
             npm run migrations:revert
             npm run migrations > /tmp/migration.log
             cat /tmp/migration.log
