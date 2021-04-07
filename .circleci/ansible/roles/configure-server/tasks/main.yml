@@ -41,6 +41,3 @@
   synchronize:
     src: backend
     dest: ~/
-    owner: ubuntu
-    group: ubuntu
-    mode: 0664
