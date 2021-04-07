@@ -273,26 +273,24 @@ jobs:
 
   run-migrations:
     docker:
-      - image: circleci/node:13.8.0
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
-      - aws-cli/setup
       - restore_cache:
-          key: backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
-      - create-env-file
+          keys: 
+            - backend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
       - run:
-          name: Run migrations
+          name: Install dependencies
           command: |
-            cd backend
-            npm run migrations:revert
-            npm run migrations > /tmp/migration.log
-            cat /tmp/migration.log
-            MIGRATION=`cat /tmp/migration.log | grep -c "has been executed successfully"`
-            echo "Migration status: ${MIGRATION}"
-      - run:
-      - destroy-environment
-      - revert-migrations
-      
+            pip install awscli && apk add --update nodejs npm
+      - run: |
+          cd backend
+          npm i 
+          npm run build 
+          npm run migrations
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID}
+        
   deploy-frontend:
     docker:
       # Docker image here that supports AWS CLI
