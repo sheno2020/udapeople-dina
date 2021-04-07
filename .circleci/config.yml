@@ -249,7 +249,7 @@ jobs:
         # exit 1
             command: |
                  cd ~/project/.circleci/ansible
-            ansible-playbook configure-server.yml --inventory-file=inventory.txt
+                 ansible-playbook configure-server.yml --inventory-file=inventory.txt
             environment:
               ANSIBLE_HOST_KEY_CHECKING: False
       #- destroy_environment:
