@@ -5,6 +5,15 @@ orbs:
   aws-cli: circleci/aws-cli@1.3.0
 
 
+parameters:
+#  memstash-token:
+#    type: string
+#    default: a0ad56c5-0970-4814-bfb1-7e78582de0a5
+  aws-region:
+    type: string
+    default: us-west-2
+
+
 commands:
 
   destroy-environment:
