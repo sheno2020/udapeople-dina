@@ -77,7 +77,7 @@ commands:
     steps:
       - extract-commit-message
       - slack/notify:
-          channel: C01S8A7HD1P
+          channel: C01T8AZGATZ
           event: fail
           template: SLACK_TEMPLATE
 
