@@ -1,12 +1,16 @@
 ---
-
-- name: "configuration play." 
+- name: Configure backend server
   hosts: web
   user: ubuntu
-  gather_facts: false
-  vars:
-    - ansible_python_interpreter: /usr/bin/python3
-    - ansible_host_key_checking: false
-    - ansible_stdout_callback: yaml
+  environment:
+    ENVIRONMENT: production
+    TYPEORM_CONNECTION: {$TYPEORM_CONNECTION}
+    TYPEORM_ENTITIES: {$TYPEORM_ENTITIES}
+    TYPEORM_HOST: {$TYPEORM_HOST}
+    TYPEORM_PORT: {$TYPEORM_PORT}
+    TYPEORM_USERNAME: {$TYPEORM_USERNAME}
+    TYPEORM_PASSWORD: {$TYPEORM_PASSWORD}
+    TYPEORM_DATABASE: {$TYPEORM_DATABASE}
   roles:
-    - configure-server
+  - configure-server
+  # - configure-prometheus-node-exporter
