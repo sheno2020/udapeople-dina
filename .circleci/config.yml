@@ -484,14 +484,14 @@ workflows:
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       #- run-migrations:
-          requires: [configure-infrastructure]
+      #    requires: [configure-infrastructure]
       #- deploy-frontend:
-          requires: [run-migrations]
+      #    requires: [run-migrations]
       #- deploy-backend:
-          requires: [run-migrations]
+      #    requires: [run-migrations]
       #- smoke-test:
-          requires: [deploy-backend, deploy-frontend]
+      #    requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update:
-          requires: [smoke-test]
+      #   requires: [smoke-test]
       #- cleanup:
-          requires: [cloudfront-update]
+      #    requires: [cloudfront-update]
