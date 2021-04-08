@@ -1,44 +1,62 @@
-- name: "Upgrade Packages"
-  become: true
+- name: "update apt packages."
+  become: yes
   apt:
-    upgrade: "yes"
-
-- name: "Install Python3"
-  become: true
-  shell:
-    apt install -y python3
-
-- name: "Install nodejs and dependencies"
-  become: true
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
     update_cache: yes
 
-- name: "Install pm2"
-  become: true
+- name: "upgrade packages"
+  become: yes
+  apt:
+    upgrade: yes
+
+- name: remove dependencies that are no longer required
+  become: yes
+  apt:
+    autoremove: yes
+
+- name: "install dependencies."
+  become: yes
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_13.x | sudo bash -
+    apt-get install -y nodejs
+
+    
+- name: "install pm2"
+  become: yes
   npm:
     name: pm2
     global: yes
     production: yes
     state: present
 
-- name: "Copy ~/.bash_profile file"
-  become: true
-  copy:
-    src: /home/.bash
-    dest: /home/ubuntu/.bash_profile
-    owner: ubuntu
-    group: ubuntu
-    mode: 0664
-    
-- name: "install rsync"
-  become: true
-  shell:
+
+- name: install rsync
+  become: yes
+  shell: |
     apt install -y rsync
-      
-- name: "copy backend folder to remote server"
-  become: true
-  copy:
+
+- name: copy ditribution folder to remote server
+  become: yes
+  synchronize:
     src: backend
-    dest: /home/ubuntu/
+    dest: ~/
+
+- name: make env file
+  become: yes
+  shell: |
+    cd backend
+    cp env .env 
+    rm env  
+    cat .env
+  register: env_output
+  
+- debug: var=env_output
+  
+- name: build backend application
+  become: yes
+  shell: |
+    cd backend/
+    npm i 
+    npm run build
+  register: copy_output
+    
+- debug: var=copy_output
