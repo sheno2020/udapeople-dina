@@ -31,8 +31,3 @@
     owner: ubuntu
     group: ubuntu
     mode: 0664
-    
-- name: "install rsync"
-  become: true
-  shell:
-    apt install -y rsync
