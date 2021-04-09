@@ -79,19 +79,19 @@ commands:
     steps:
       - extract-commit-message
       - slack/notify:
-          channel: C01T8AZGATZ
+          channel: C01TGANEBHC
           event: fail
           template: SLACK_TEMPLATE
 
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      backend-infra:
+      backend-stack:
         type: string
-        default: backend-infra-${CIRCLE_WORKFLOW_ID}
-      frontend-infra:
+        default: backend-stack-${CIRCLE_WORKFLOW_ID}
+      frontend-stack:
         type: string
-        default: frontend-infra-${CIRCLE_WORKFLOW_ID}
+        default: frontend-stack-${CIRCLE_WORKFLOW_ID}
       s3-bucket:
         type: string
         default: udapeople-${CIRCLE_WORKFLOW_ID}
@@ -101,8 +101,8 @@ commands:
           when: on_fail
           command: |
             aws s3 rm s3://<< parameters.s3-bucket >> --recursive
-            aws cloudformation delete-stack --stack-name << parameters.backend-infra >>
-            aws cloudformation delete-stack --stack-name << parameters.frontend-infra >>
+            aws cloudformation delete-stack --stack-name << parameters.backend-stack >>
+            aws cloudformation delete-stack --stack-name << parameters.frontend-stack >>
             exit 0
 
   revert-migrations:
@@ -136,7 +136,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}	
+          key: frontend-build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
       - slack-failed
 
   build-backend:
@@ -208,7 +208,7 @@ jobs:
             npm audit fix --audit-level=critical --force
       - slack-failed
 
-  deploy-infrastructure:
+  deploy-stackstructure:
     docker:
       - image: amazon/aws-cli
     steps:
@@ -218,12 +218,12 @@ jobs:
           command: |
             yum -y install tar gzip jq git
       - run:
-          name: Ensure back-end infrastructure exists
+          name: Ensure back-end stackstructure exists
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople type=backend\
-              --stack-name "backend-infra-${CIRCLE_WORKFLOW_ID}" \
+              --stack-name "backend-stack-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
       - run:
           name: Add back-end ip to ansible inventory
@@ -240,18 +240,18 @@ jobs:
             - project/.circleci/ansible/inventory.txt
 
       - run:
-          name: Ensure front-end infrastructure exist
+          name: Ensure front-end stackstructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople type=frontend\
-              --stack-name "frontend-infra-${CIRCLE_WORKFLOW_ID}" \
+              --stack-name "frontend-stack-${CIRCLE_WORKFLOW_ID}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
 
       - slack-failed
       - destroy-environment
 
-  configure-infrastructure:
+  configure-stackstructure:
     docker:
       - image: python:3.7-alpine3.11
     steps:
@@ -457,8 +457,8 @@ jobs:
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
               aws s3 rm s3://udapeople-${OldWorkflowID} --recursive
-              aws cloudformation delete-stack --stack-name backend-infra-${OldWorkflowID}
-              aws cloudformation delete-stack --stack-name frontend-infra-${OldWorkflowID}
+              aws cloudformation delete-stack --stack-name backend-stack-${OldWorkflowID}
+              aws cloudformation delete-stack --stack-name frontend-stack-${OldWorkflowID}
             fi
       - slack-failed
       - revert-migrations
@@ -477,23 +477,23 @@ workflows:
 #          requires: [build-backend]
 #      - scan-frontend:
 #          requires: [build-frontend]
-      - deploy-infrastructure:
+      - deploy-stackstructure:
 #          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           requires: [build-backend, build-frontend]
           filters:
             branches:
               only: [master]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
+      - configure-stackstructure:
+          requires: [deploy-stackstructure]
       - run-migrations:
-          requires: [configure-infrastructure]
+          requires: [configure-stackstructure]
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-         requires: [smoke-test]
+      #- smoke-test:
+      #    requires: [deploy-backend, deploy-frontend]
+      #- cloudfront-update:
+      #   requires: [smoke-test]
       #- cleanup:
       #    requires: [cloudfront-update]
