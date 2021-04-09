@@ -208,7 +208,7 @@ jobs:
             npm audit fix --audit-level=critical --force
       - slack-failed
 
-  deploy-stackstructure:
+  deploy-stack:
     docker:
       - image: amazon/aws-cli
     steps:
@@ -218,7 +218,7 @@ jobs:
           command: |
             yum -y install tar gzip jq git
       - run:
-          name: Ensure back-end stackstructure exists
+          name: Ensure back-end stack exists
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
@@ -240,7 +240,7 @@ jobs:
             - project/.circleci/ansible/inventory.txt
 
       - run:
-          name: Ensure front-end stackstructure exist
+          name: Ensure front-end stack exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
@@ -251,7 +251,7 @@ jobs:
       - slack-failed
       - destroy-environment
 
-  configure-stackstructure:
+  configure-stack:
     docker:
       - image: python:3.7-alpine3.11
     steps:
@@ -477,20 +477,20 @@ workflows:
 #          requires: [build-backend]
 #      - scan-frontend:
 #          requires: [build-frontend]
-      - deploy-stackstructure:
+      - deploy-stack:
 #          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           requires: [build-backend, build-frontend]
           filters:
             branches:
               only: [master]
-      - configure-stackstructure:
-          requires: [deploy-stackstructure]
-      #- run-migrations:
-      #    requires: [configure-stackstructure]
-      #- deploy-frontend:
-      #    requires: [run-migrations]
-      #- deploy-backend:
-      #    requires: [run-migrations]
+      - configure-stack:
+          requires: [deploy-stack]
+      - run-migrations:
+          requires: [configure-stack]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
       #- smoke-test:
       #    requires: [deploy-backend, deploy-frontend]
       #- cloudfront-update:
