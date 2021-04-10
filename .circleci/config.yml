@@ -81,7 +81,8 @@ commands:
       - slack/notify:
           channel: devops
           event: fail
-          template: SLACK_TEMPLATE
+          message: Fail  message to notify the channel about the latest build
+         # template: SLACK_TEMPLATE
 
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
