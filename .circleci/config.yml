@@ -478,16 +478,16 @@ workflows:
 #          requires: [build-backend]
 #      - scan-frontend:
 #          requires: [build-frontend]
-      - deploy-infrastructure:
+      - deploy-stack:
 #          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           requires: [build-backend, build-frontend]
           filters:
             branches:
               only: [master]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
+      - configure-stack:
+          requires: [deploy-stack]
       - run-migrations:
-          requires: [configure-infrastructure]
+          requires: [configure-stack]
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
